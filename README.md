@@ -100,8 +100,6 @@ During development, Trivy caught a real CRITICAL-severity, unfixed `perl-base` C
 
 ![Green pipeline run](pipeline-success.png)
 
-*(screenshot of the passing GitHub Actions run — build, scan, connect, deploy, all green)*
-
 ---
 
 ## Project Structure
