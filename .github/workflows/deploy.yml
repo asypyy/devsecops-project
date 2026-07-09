@@ -8,36 +8,36 @@ jobs:
   build-scan-deploy:
     runs-on: ubuntu-latest
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Build Docker image
-      run: docker build -t devsecops-api:latest .
+      - name: Build Docker image
+        run: docker build -t devsecops-api:latest .
 
-    - name: Scan with Trivy
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: devsecops-api:latest
-        format: table
-        exit-code: 1
-        severity: CRITICAL
+      - name: Scan with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: devsecops-api:latest
+          format: table
+          exit-code: 1
+          severity: CRITICAL
 
-    - name: Connect to Tailscale
-      uses: tailscale/github-action@v2
-      with:
-        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-        oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
-        tags: tag:ci
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
+          tags: tag:ci
 
-    - name: Deploy to VM via SSH
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.VM_TAILSCALE_IP }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          docker stop api || true
-          docker rm api || true
-          docker build -t devsecops-api:latest ~/devsecops-project
-          docker run -d -p 8000:8000 --name api devsecops-api:latest
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VM_TAILSCALE_IP }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            docker stop api || true
+            docker rm api || true
+            docker build -t devsecops-api:latest ~/devsecops-project
+            docker run -d -p 8000:8000 --name api devsecops-api:latest
