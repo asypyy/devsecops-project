@@ -1,0 +1,5 @@
+DevSecOps Portfolio Project
+
+A containerized Python/FastAPI application deployed via a fully automated, security-scanned CI/CD pipeline to a self-hosted Ubuntu Server VM, reachable only over a private Tailscale mesh network.
+
+Built to demonstrate practical DevSecOps skills: infrastructure hardening, container security, automated vulnerability scanning, secrets management, and zero-trust network access, end to end, not just in theory.

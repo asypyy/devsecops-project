@@ -16,12 +16,14 @@ spec:
     spec:
       containers:
         - name: notes-api
-          image: notes-api:latest
+          image: devsecops-api:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           securityContext:
             runAsNonRoot: true
+            runAsUser: 1000
+            runAsUser: 1000
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:

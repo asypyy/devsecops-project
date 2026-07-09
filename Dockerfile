@@ -7,7 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
 
-RUN adduser -D -H appuser
+RUN adduser -D -H -u 1000 appuser 
 USER appuser
 
 EXPOSE 8000
