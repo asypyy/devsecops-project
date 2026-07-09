@@ -2,14 +2,12 @@ FROM python:3.12-alpine
 
 WORKDIR /app
 
-RUN adduser -D -H appuser
-
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
 
+RUN adduser -D -H appuser
 USER appuser
 
 EXPOSE 8000
