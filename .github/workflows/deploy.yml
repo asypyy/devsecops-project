@@ -39,5 +39,12 @@ jobs:
           script: |
             docker stop api || true
             docker rm api || true
-            docker build -t devsecops-api:latest ~/devsecops-project
-            docker run -d -p 8000:8000 --name api devsecops-api:latest
+            cd ~/devsecops-project
+            git pull origin main
+            minikube start --driver=docker || true
+            eval $(minikube docker-env)
+            docker build -t devsecops-api:latest .
+            kubectl apply -f k8s/deployment.yaml
+            kubectl apply -f k8s/service.yaml
+            kubectl rollout restart deployment/notes-api
+            kubectl rollout status deployment/notes-api --timeout=60s
