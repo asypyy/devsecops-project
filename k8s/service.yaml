@@ -3,9 +3,10 @@ kind: Service
 metadata:
   name: notes-api
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: notes-api
   ports:
     - port: 8000
       targetPort: 8000
+      NodePort: 30080
