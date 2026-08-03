@@ -7,4 +7,4 @@ __pycache__/
 body.json
 
 CLAUDE.md
-
+k8s/postgres-secret.yaml
