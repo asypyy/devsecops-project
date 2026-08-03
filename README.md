@@ -155,6 +155,8 @@ devsecops-project/
 
 ## Local Development
 
+**Plain Docker (no Postgres, no k8s — quick smoke test only):**
+
 ```bash
 python -m venv venv
 source venv/bin/activate
@@ -166,6 +168,40 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 docker build -t devsecops-api:latest .
 docker run -d -p 8000:8000 --name api devsecops-api:latest
 curl http://localhost:8000/health
+```
+
+> Note: `main.py` expects a reachable Postgres instance (`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`). Plain `docker run` above will fail on any `/notes` endpoint without one — use the k8s path below for a working full-stack test.
+
+**Full stack via minikube (matches production deploy):**
+
+```bash
+minikube start --driver=docker
+eval $(minikube docker-env)
+docker build -t devsecops-api:latest .
+
+kubectl apply -f k8s/postgres-secret.yaml   # create manually first, see below
+kubectl apply -f k8s/postgres-pvc.yaml
+kubectl apply -f k8s/postgres-deployment.yaml
+kubectl apply -f k8s/postgres-service.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+
+kubectl port-forward svc/notes-api 8000:8000
+curl http://localhost:8000/health
+```
+
+`k8s/postgres-secret.yaml` isn't committed to the repo (contains DB credentials). Create it locally:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+stringData:
+  POSTGRES_USER: notesuser
+  POSTGRES_PASSWORD: <your-own-password>
+  POSTGRES_DB: notesdb
 ```
 
 ---
