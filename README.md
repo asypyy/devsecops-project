@@ -27,11 +27,17 @@ Built to demonstrate practical DevSecOps skills: infrastructure hardening, conta
                                                              ▼
                                                  ┌─────────────────────────┐
                                                  │  Ubuntu Server 24.04 VM │
-                                                 │  UFW + fail2band        │
-                                                 │  Docker (non-root user) │
-                                                 │  FastAPI on :8000       │
+                                                 │  UFW + fail2ban         │
+                                                 │  minikube (docker drv)  │
+                                                 │  ├─ Deployment (2 pods) │
+                                                 │  │  notes-api:8000      │
+                                                 │  ├─ Service: ClusterIP  │
+                                                 │  └─ port-forward        │
+                                                 │     (systemd, 0.0.0.0)  │
                                                  └─────────────────────────┘
 ```
+
+Cluster is not exposed via NodePort — minikube's docker driver isolates its network from the VM's Tailscale interface. Access is via `kubectl port-forward`, kept alive as a systemd service across reboots.
 
 No inbound ports are exposed to the public internet. The VM is reachable only via its Tailscale IP, and SSH is restricted to the `tailscale0` interface. The GitHub Actions runner joins the tailnet on-demand as an ephemeral, tagged (`tag:ci`) node for the duration of the deploy step, then disconnects.
 
@@ -50,6 +56,32 @@ No inbound ports are exposed to the public internet. The VM is reachable only vi
 | OS | Ubuntu Server 24.04 (minimized), VirtualBox VM |
 
 ---
+
+## Kubernetes
+
+The app runs on a single-node **minikube** cluster (docker driver) on the VM, rather than a bare `docker run` container.
+
+| Resource | Config |
+|---|---|
+| Deployment | `k8s/deployment.yaml` — 2 replicas |
+| Resource limits | 100m/128Mi requests, 250m/256Mi limits per pod |
+| Probes | `readinessProbe` + `livenessProbe` on `GET /health` |
+| Security context | `runAsNonRoot: true`, `runAsUser: 1000`, `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`, all capabilities dropped |
+| Service | `k8s/service.yaml` — `ClusterIP` (not NodePort — see below) |
+| Access | `kubectl port-forward svc/notes-api 8000:8000 --address 0.0.0.0`, kept alive via a systemd unit so it survives terminal close and VM reboot |
+| Cluster autostart | `minikube start --driver=docker` runs automatically on boot via a dedicated systemd unit; the port-forward unit depends on it |
+
+**Why ClusterIP, not NodePort:** minikube's docker driver runs the cluster inside an isolated Docker network. Even with a stable `minikube ip`, there's no route from the VM's Tailscale interface into that network — NodePort is only reachable from inside the VM itself. `kubectl port-forward` tunnels through the Kubernetes API server instead, which the VM can reach, making it the correct pattern here.
+
+**Deploying manually:**
+
+```bash
+eval $(minikube docker-env)
+docker build -t devsecops-api:latest .
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl rollout restart deployment/notes-api
+```
 
 ## Pipeline: Build → Scan → Deploy
 
@@ -111,6 +143,9 @@ devsecops-project/
 ├── requirements.txt
 ├── .gitignore
 ├── .dockerignore
+├── k8s/
+│   ├── deployment.yaml
+│   └── service.yaml
 └── .github/
     └── workflows/
         └── deploy.yml

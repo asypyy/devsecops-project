@@ -37,8 +37,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            docker stop api || true
-            docker rm api || true
             cd ~/devsecops-project
             git pull origin main
             minikube start --driver=docker || true
