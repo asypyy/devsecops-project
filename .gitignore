@@ -8,3 +8,5 @@ body.json
 
 CLAUDE.md
 k8s/postgres-secret.yaml
+PLAN.md
+*.png

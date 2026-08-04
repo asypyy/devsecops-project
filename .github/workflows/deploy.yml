@@ -12,13 +12,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Docker image
+      - name: Build Backend Docker image
         run: docker build -t devsecops-api:latest .
 
-      - name: Scan with Trivy
+      - name: Scan Backend with Trivy
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: devsecops-api:latest
+          format: table
+          exit-code: 1
+          severity: CRITICAL
+
+      - name: Build Frontend Docker image
+        run: docker build -t devsecops-frontend:latest ./frontend
+
+      - name: Scan Frontend with Trivy
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: devsecops-frontend:latest
           format: table
           exit-code: 1
           severity: CRITICAL
@@ -42,7 +53,12 @@ jobs:
             minikube start --driver=docker || true
             eval $(minikube docker-env)
             docker build -t devsecops-api:latest .
+            docker build -t devsecops-frontend:latest ./frontend
             kubectl apply -f k8s/deployment.yaml
             kubectl apply -f k8s/service.yaml
+            kubectl apply -f k8s/frontend-deployment.yaml
+            kubectl apply -f k8s/frontend-service.yaml
             kubectl rollout restart deployment/notes-api
+            kubectl rollout restart deployment/notes-frontend
             kubectl rollout status deployment/notes-api --timeout=60s
+            kubectl rollout status deployment/notes-frontend --timeout=60s
