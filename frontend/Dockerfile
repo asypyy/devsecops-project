@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 
 # Serve stage
-FROM nginx:1.25-alpine AS runner
+FROM nginx:alpine AS runner
 
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
