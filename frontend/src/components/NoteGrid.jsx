@@ -1,7 +1,7 @@
 import React from 'react';
 import NoteCard from './NoteCard';
 
-export default function NoteGrid({ notes, loading, onEdit, onDelete, onCreateClick }) {
+export default function NoteGrid({ notes, loading, onEdit, onDelete, onCreateClick, onTagClick, isFiltered }) {
   return (
     <>
       <div className="controls-bar">
@@ -17,13 +17,21 @@ export default function NoteGrid({ notes, loading, onEdit, onDelete, onCreateCli
         </div>
       ) : notes.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-title">No notes found</div>
-          <p style={{ color: 'var(--text-muted)' }}>Click "+ New Note" to create your first note.</p>
+          <div className="empty-title">{isFiltered ? 'No matching notes found' : 'No notes found'}</div>
+          <p style={{ color: 'var(--text-muted)' }}>
+            {isFiltered ? 'Try clearing your search query or tag filter.' : 'Click "+ New Note" to create your first note.'}
+          </p>
         </div>
       ) : (
         <div className="notes-grid">
           {notes.map((note) => (
-            <NoteCard key={note.id} note={note} onEdit={onEdit} onDelete={onDelete} />
+            <NoteCard
+              key={note.id}
+              note={note}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onTagClick={onTagClick}
+            />
           ))}
         </div>
       )}

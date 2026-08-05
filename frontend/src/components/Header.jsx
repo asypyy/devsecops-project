@@ -13,8 +13,9 @@ export default function Header({ health, user, onLogout }) {
           <span>Backend: {health.status}</span>
         </div>
         {user && (
-          <button className="btn-secondary" onClick={onLogout}>
-            Logout ({user.username})
+          <button className="btn-logout" onClick={onLogout} title="Sign out of account">
+            <span>Logout</span>
+            <span className="user-pill">{user.username}</span>
           </button>
         )}
       </div>
