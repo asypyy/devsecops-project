@@ -17,6 +17,9 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
 
+  // Toast notification state for reminders
+  const [activeToast, setActiveToast] = useState(null);
+
   // Auth state
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('notes_auth');
@@ -42,6 +45,27 @@ export default function App() {
       setNotes([]);
     }
   }, [user]);
+
+  // Periodic reminder checker running every 5 seconds
+  useEffect(() => {
+    if (!notes || notes.length === 0) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      notes.forEach((note) => {
+        if (note.remind_at) {
+          const remindDt = new Date(note.remind_at);
+          // Trigger toast if reminder date was reached in the last 1 minute
+          const diffMs = now.getTime() - remindDt.getTime();
+          if (diffMs >= 0 && diffMs <= 60000) {
+            setActiveToast(`🔔 Reminder: "${note.title}" is due now!`);
+          }
+        }
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [notes]);
 
   const checkHealth = async () => {
     try {
@@ -166,13 +190,11 @@ export default function App() {
   // Filter notes based on search query and tag selection
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
-      // Tag filter
       if (selectedTag) {
         const noteTagList = note.tags ? note.tags.split(',').map((t) => t.trim()) : [];
         if (!noteTagList.includes(selectedTag)) return false;
       }
 
-      // Search query filter (matches title, content, or tags)
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
         const titleMatch = note.title ? note.title.toLowerCase().includes(query) : false;
@@ -187,6 +209,16 @@ export default function App() {
 
   return (
     <div className="app-container">
+      {/* Toast Notification Banner */}
+      {activeToast && (
+        <div className="toast-notification">
+          <span>{activeToast}</span>
+          <button className="toast-close-btn" onClick={() => setActiveToast(null)}>
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Header Component */}
       <Header health={health} user={user} onLogout={handleLogout} />
 

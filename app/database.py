@@ -33,7 +33,7 @@ def init_db():
                     content TEXT NOT NULL
                 )
             """)
-            # Schema migrations for user_id, is_pinned, and tags columns
+            # Schema migrations for user_id, is_pinned, tags, created_at, auto_delete_at, and remind_at columns
             cur.execute("""
                 ALTER TABLE notes 
                 ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE;
@@ -45,5 +45,17 @@ def init_db():
             cur.execute("""
                 ALTER TABLE notes 
                 ADD COLUMN IF NOT EXISTS tags TEXT DEFAULT '';
+            """)
+            cur.execute("""
+                ALTER TABLE notes 
+                ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+            """)
+            cur.execute("""
+                ALTER TABLE notes 
+                ADD COLUMN IF NOT EXISTS auto_delete_at TIMESTAMP WITH TIME ZONE;
+            """)
+            cur.execute("""
+                ALTER TABLE notes 
+                ADD COLUMN IF NOT EXISTS remind_at TIMESTAMP WITH TIME ZONE;
             """)
             conn.commit()
