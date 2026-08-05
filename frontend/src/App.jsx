@@ -138,7 +138,7 @@ export default function App() {
 
       {/* Banner */}
       <div className="banner-api">
-        🌐 <strong>API Endpoint:</strong> {API_URL} (JWT Authenticated via Funnel + K8s)
+        🛡️ <strong>DevSecOps Architecture:</strong> Secure JWT API | Kubernetes Cluster & Tailscale Funnel
       </div>
 
       {/* Main Content */}

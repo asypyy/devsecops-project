@@ -1,45 +1,39 @@
 # DevSecOps Portfolio Project
 
-A containerized Python/FastAPI application deployed via a fully automated, security-scanned CI/CD pipeline to a self-hosted Ubuntu Server VM, reachable only over a private Tailscale mesh network.
+A full-stack, containerized Python/FastAPI + React application deployed via a security-gated CI/CD pipeline to a self-hosted Ubuntu Server Kubernetes cluster (minikube), securely exposed to the public internet via Tailscale Funnel and hosted on Vercel.
 
-Built to demonstrate practical DevSecOps skills: infrastructure hardening, container security, automated vulnerability scanning, secrets management, and zero-trust network access, end to end, not just in theory.
+Built to demonstrate end-to-end DevSecOps principles: zero-trust networking, container hardening, automated Trivy vulnerability gates, JWT & bcrypt authentication, stateful database orchestration, and hybrid public/private cloud hosting.
 
 ---
 
 ## Architecture
 
 ```
- GitHub Actions (on push to main)
-        │
-        ▼
- ┌─────────────────┐      ┌──────────────────┐     ┌────────────────────┐
- │  Build Docker   │────▶│  Trivy Security  │────▶│  Tailscale OAuth   │
- │  image          │      │  Scan (CRITICAL) │     │  ephemeral connect │
- └─────────────────┘      └──────────────────┘     └──────────┬─────────┘
-                                                              │
-                                                              ▼
-                                                 ┌─────────────────────────┐
-                                                 │  SSH deploy over        │
-                                                 │  Tailscale to VM        │
-                                                 │  (100.65.181.50)        │
-                                                 └───────────┬─────────────┘
-                                                             │
-                                                             ▼
-                                                 ┌─────────────────────────┐
-                                                 │  Ubuntu Server 24.04 VM │
-                                                 │  UFW + fail2ban         │
-                                                 │  minikube (docker drv)  │
-                                                 │  ├─ Deployment (2 pods) │
-                                                 │  │  notes-api:8000      │
-                                                 │  ├─ Service: ClusterIP  │
-                                                 │  └─ port-forward        │
-                                                 │     (systemd, 0.0.0.0)  │
-                                                 └─────────────────────────┘
+  User Browser (Vercel Frontend)
+         │
+         ▼ (Public HTTPS)
+ ┌───────────────────────────┐
+ │ https://aserver.tail...   │ ◄─── Tailscale Funnel Edge (TLS Termination)
+ └─────────────┬─────────────┘
+               │ (Encrypted WireGuard Tunnel)
+               ▼
+ ┌────────────────────────────────────────────────────────┐
+ │ Ubuntu Server 24.04 VM (Minikube Cluster)              │
+ │ UFW + fail2ban                                         │
+ │                                                        │
+ │ ├─ Frontend Pods (nginx:alpine) ◄── Port 80 (Internal) │
+ │ ├─ API Pods (notes-api)        ◄── Port 8000           │
+ │ └─ Postgres Pod                ◄── Stateful Database   │
+ └────────────────────────────────────────────────────────┘
+
+ CI/CD Pipeline (GitHub Actions on push to main):
+ 🛠️ Build Docker Images (Backend & Frontend)
+ 🛡️ Trivy Security Scan Gate (CRITICAL Severity Exit)
+ 🔑 Ephemeral Tailscale OAuth Connection
+ 🚀 Automated K8s Rollout over SSH
 ```
 
-Cluster is not exposed via NodePort — minikube's docker driver isolates its network from the VM's Tailscale interface. Access is via `kubectl port-forward`, kept alive as a systemd service across reboots.
-
-No inbound ports are exposed to the public internet. The VM is reachable only via its Tailscale IP, and SSH is restricted to the `tailscale0` interface. The GitHub Actions runner joins the tailnet on-demand as an ephemeral, tagged (`tag:ci`) node for the duration of the deploy step, then disconnects.
+No inbound ports are exposed to the public internet. The VM is reachable only via its private Tailscale IP, and Tailscale Funnel proxies public HTTPS requests directly to local port `8000`. The GitHub Actions runner joins the tailnet on-demand as an ephemeral node tagged (`tag:ci`) during deploys.
 
 ---
 
@@ -47,13 +41,18 @@ No inbound ports are exposed to the public internet. The VM is reachable only vi
 
 | Layer | Tool |
 |---|---|
-| Application | Python, FastAPI |
-| Containerization | Docker (non-root `appuser`, Alpine base) |
-| CI/CD | GitHub Actions |
-| Security scanning | Trivy (container image vulnerability scanning) |
-| Private networking | Tailscale (OAuth client, tagged ACLs) |
-| Host hardening | UFW, fail2ban |
-| OS | Ubuntu Server 24.04 (minimized), VirtualBox VM |
+| Frontend | React 19, Vite, Vanilla CSS |
+| Frontend Hosting | Vercel (Production SPA) |
+| Backend API | Python, FastAPI, Pydantic |
+| Authentication | JWT (HS256) & bcrypt password hashing |
+| Database | PostgreSQL 16 (StatefulSet / K8s PVC) |
+| Containerization | Docker (Multi-stage builds, non-root users, Alpine base) |
+| Ingress / Exposure | Tailscale Funnel (Zero-Trust Public HTTPS Proxy) |
+| Orchestration | Kubernetes (minikube) |
+| CI/CD Pipeline | GitHub Actions |
+| Security Scanning | Trivy (Fail-on-CRITICAL container vulnerability gate) |
+| Private Network | Tailscale Mesh VPN (OAuth ephemeral tokens) |
+| Host Hardening | UFW (tailscale0 interface binding), fail2ban, Linux permissions |
 
 ---
 
@@ -138,17 +137,25 @@ During development, Trivy caught a real CRITICAL-severity, unfixed `perl-base` C
 
 ```
 devsecops-project/
-├── main.py
-├── Dockerfile
-├── requirements.txt
-├── .gitignore
-├── .dockerignore
-├── k8s/
-│   ├── deployment.yaml
-│   └── service.yaml
+├── main.py                    # FastAPI backend with JWT auth & PostgreSQL CRUD
+├── Dockerfile                 # Multi-stage Alpine Python image (non-root appuser)
+├── requirements.txt           # Python dependencies (FastAPI, PyJWT, bcrypt, psycopg2)
+├── vercel.json                # Vercel SPA routing configuration
+├── frontend/                  # React + Vite application
+│   ├── src/                   # Auth & Notes React components
+│   ├── Dockerfile             # Multi-stage build (Node -> NGINX static server)
+│   ├── vercel.json            # Client-side routing rewrite rules
+│   └── package.json
+├── k8s/                       # Kubernetes manifests
+│   ├── deployment.yaml        # FastAPI API Deployment (2 replicas)
+│   ├── service.yaml           # API ClusterIP Service
+│   ├── frontend-deployment.yaml # NGINX Frontend Deployment
+│   ├── frontend-service.yaml    # Frontend ClusterIP Service
+│   ├── postgres-pvc.yaml      # Persistent Volume Claim for database
+│   └── postgres-deployment.yaml # PostgreSQL Stateful Deployment
 └── .github/
     └── workflows/
-        └── deploy.yml
+        └── deploy.yml         # CI/CD pipeline (Build -> Trivy Scan -> Tailscale -> K8s Rollout)
 ```
 
 ---
