@@ -4,7 +4,11 @@ from app.database import init_db
 from app.routers.auth_router import router as auth_router
 from app.routers.notes_router import router as notes_router
 
+from prometheus_fastapi_instrumentator import Instrumentator
+
 app = FastAPI(title="DevSecOps Notes API")
+
+Instrumentator().instrument(app).expose(app)
 
 app.add_middleware(
     CORSMiddleware,
