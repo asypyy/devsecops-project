@@ -1,0 +1,62 @@
+---
+- name: DevSecOps Host Provisioning and Security Hardening Playbook
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Update apt cache and install core system & security packages
+      apt:
+        name:
+          - ufw
+          - fail2ban
+          - curl
+          - git
+          - docker.io
+          - apt-transport-https
+          - ca-certificates
+        state: present
+        update_cache: yes
+
+    - name: Ensure fail2ban service is enabled and running
+      systemd:
+        name: fail2ban
+        state: started
+        enabled: yes
+
+    - name: Ensure user asyraf is added to docker group
+      user:
+        name: asyraf
+        groups: docker
+        append: yes
+
+    - name: Set UFW default incoming policy to DENY
+      ufw:
+        direction: incoming
+        policy: deny
+
+    - name: Set UFW default outgoing policy to ALLOW
+      ufw:
+        direction: outgoing
+        policy: allow
+
+    - name: Allow SSH (Port 22) scoped strictly to tailscale0 interface
+      ufw:
+        rule: allow
+        interface: tailscale0
+        to_port: '22'
+        proto: tcp
+
+    - name: Allow Port 8000 scoped strictly to tailscale0 interface
+      ufw:
+        rule: allow
+        interface: tailscale0
+        to_port: '8000'
+        proto: tcp
+
+    - name: Enable UFW firewall service
+      ufw:
+        state: enabled
+
+    - name: Display completion summary
+      debug:
+        msg: "Host security hardening and provisioning completed successfully on {{ inventory_hostname }}!"

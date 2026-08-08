@@ -27,7 +27,7 @@ def create_access_token(user_id: str, username: str) -> str:
 
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentialsg
+    token = credentials.credentials
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = payload.get("sub")
