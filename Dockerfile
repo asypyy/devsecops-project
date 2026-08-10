@@ -2,8 +2,8 @@ FROM python:3.12-alpine
 
 WORKDIR /app
 
-# Install build dependencies required for compiling bcrypt extension on Alpine
-RUN apk add --no-cache gcc musl-dev libffi-dev
+# Install build dependencies required for compiling C extensions on Alpine
+RUN apk add --no-cache build-base python3-dev libffi-dev
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
