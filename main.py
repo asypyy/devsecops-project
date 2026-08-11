@@ -37,6 +37,11 @@ def startup():
     init_db()
 
 
+@app.get("/")
+def root():
+    return {"message": "DevSecOps Notes API Online", "status": "ok"}
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}

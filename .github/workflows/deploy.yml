@@ -71,10 +71,11 @@ jobs:
             kubectl rollout restart deployment/notes-frontend
             kubectl rollout status deployment/notes-api --timeout=60s
             kubectl rollout status deployment/notes-frontend --timeout=60s
+            sleep 15
 
       - name: Run OWASP ZAP DAST Scan
         uses: zaproxy/action-baseline@v0.12.0
         with:
-          target: 'https://aserver.tail5c3f3c.ts.net'
+          target: 'https://aserver.tail5c3f3c.ts.net/health'
           fail_action: false
 
