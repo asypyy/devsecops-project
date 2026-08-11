@@ -79,8 +79,9 @@ jobs:
             sleep 10
 
       - name: Run OWASP ZAP DAST Scan
-        uses: zaproxy/action-baseline@v0.12.0
+        uses: zaproxy/action-baseline@v0.14.0
         with:
           target: 'https://aserver.tail5c3f3c.ts.net/health'
+          artifact_name: 'zap-report'
           fail_action: false
 
