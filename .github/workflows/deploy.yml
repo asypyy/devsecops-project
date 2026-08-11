@@ -8,6 +8,10 @@ jobs:
   build-scan-deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      issues: write
+      contents: read
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,7 +75,8 @@ jobs:
             kubectl rollout restart deployment/notes-frontend
             kubectl rollout status deployment/notes-api --timeout=60s
             kubectl rollout status deployment/notes-frontend --timeout=60s
-            sleep 15
+            sudo systemctl restart notes-portforward.service || true
+            sleep 10
 
       - name: Run OWASP ZAP DAST Scan
         uses: zaproxy/action-baseline@v0.12.0
