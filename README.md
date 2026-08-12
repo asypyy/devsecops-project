@@ -57,6 +57,7 @@ No inbound ports are exposed to the public internet. The VM is reachable only vi
 | **Host Provisioning** | Ansible | Automated UFW firewall & fail2ban playbook configuration |
 | **SAST (Code Security)** | Semgrep | Static Analysis Security Testing in CI for OWASP Top 10 |
 | **Container Security** | Trivy | Fail-closed container image vulnerability gate |
+| **Supply Chain Security** | Syft & Cosign | Automated SPDX JSON SBOM generation & cryptographic container signing |
 | **DAST (Live Security)** | OWASP ZAP | Dynamic active web attack vulnerability scanner |
 | **Observability** | Prometheus & Grafana | Time-series metrics scraping (`/metrics`) and real-time visual dashboards |
 | **Private Network** | Tailscale Mesh VPN | Ephemeral OAuth token authentication (`tag:ci`) |
