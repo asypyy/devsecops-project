@@ -52,6 +52,7 @@ No inbound ports are exposed to the public internet. The VM is reachable only vi
 | **Database** | PostgreSQL 16 | Relational data persistence with Kubernetes PVC |
 | **Containerization** | Docker | Multi-stage Alpine builds, non-root user (`UID 1000`) |
 | **Orchestration** | Kubernetes (minikube) | Replicas, ClusterIP, `securityContext` hardening, PVC |
+| **GitOps Engine** | ArgoCD | Declarative GitOps cluster deployment & self-healing auto-sync |
 | **Ingress / Exposure** | Tailscale Funnel | Zero-Trust public HTTPS proxy with Let's Encrypt TLS |
 | **Host Provisioning** | Ansible | Automated UFW firewall & fail2ban playbook configuration |
 | **SAST (Code Security)** | Semgrep | Static Analysis Security Testing in CI for OWASP Top 10 |
